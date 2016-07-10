@@ -54,3 +54,15 @@ chain n
 
 -- Lambda
 -- Syntax: \x y z -> x + y + z
+
+-- Function composition with .
+-- map (\x -> negate (abs x)) [-1, -2, 1, 10]
+-- map (negate . abs) [-1, -2, 1, 2]
+
+-- Function application with $
+-- sum (map sqrt [1..100])
+-- sum $ map sqrt [1..100]
+oddSum n =
+  let oddSquare = filter odd $ map (^2) [1..]
+      belowLimit = takeWhile (< n) oddSquare
+  in sum belowLimit
