@@ -30,3 +30,19 @@ ldropWhile _ Empty = Empty
 ldropWhile f (Cons hd tl)
   | f hd = ldropWhile f tl
   | otherwise = tl
+
+linit :: Lst a -> Lst a
+linit Empty = Empty
+linit (Cons a Empty) = Empty
+linit (Cons hd tl) = Cons hd (linit tl)
+
+foldRight :: (a -> b -> b) -> b -> Lst a -> b
+foldRight f memo Empty = memo
+foldRight f memo (Cons hd tl) = f hd $ foldRight f memo tl
+
+foldLeft :: (a -> b -> a) -> a -> Lst b -> a
+foldLeft f memo Empty = memo
+foldLeft f memo (Cons hd tl) = foldLeft f (f memo hd) tl
+
+llength :: Lst a -> Integer
+llength = foldLeft (\memo n -> memo + 1) 0
