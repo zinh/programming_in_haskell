@@ -6,12 +6,16 @@ newtype Poly a = P [a]
 -- Exercise 1 -----------------------------------------
 
 x :: Num a => Poly a
-x = undefined
+x = P [1]
 
 -- Exercise 2 ----------------------------------------
 
 instance (Num a, Eq a) => Eq (Poly a) where
-    (==) = undefined
+  P [] == P [] = True
+  P (z:zs) == P (y:ys)
+    | z == y = (P zs) == (P ys)
+    | otherwise = False
+  _ == _ = False
  
 -- Exercise 3 -----------------------------------------
 
