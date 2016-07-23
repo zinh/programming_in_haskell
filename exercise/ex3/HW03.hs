@@ -34,15 +34,25 @@ type State = String -> Int
 -- Exercise 1 -----------------------------------------
 
 extend :: State -> String -> Int -> State
-extend = undefined
-
+extend currentState k v = \ name ->  if name == k then v else currentState name
 empty :: State
-empty = undefined
+empty = \ _ -> 0
 
 -- Exercise 2 -----------------------------------------
 
 evalE :: State -> Expression -> Int
-evalE = undefined
+evalE state (Var varName) = state varName
+evalE state (Val value) = value
+evalE state (Op expr1 op expr2) = case op of
+  Plus -> (evalE state expr1) + (evalE state expr2)
+  Minus -> (evalE state expr1) - (evalE state expr2)
+  Times -> (evalE state expr1) * (evalE state expr2)
+  Divide -> (evalE state expr1) `div` (evalE state expr2)
+  Gt -> if (evalE state expr1) > (evalE state expr2) then 1 else 0
+  Ge -> if (evalE state expr1) >= (evalE state expr2) then 1 else 0
+  Lt -> if (evalE state expr1) < (evalE state expr2) then 1 else 0
+  Le -> if (evalE state expr1) <= (evalE state expr2) then 1 else 0
+  Eql -> if (evalE state expr1) == (evalE state expr2) then 1 else 0
 
 -- Exercise 3 -----------------------------------------
 
@@ -54,16 +64,34 @@ data DietStatement = DAssign String Expression
                      deriving (Show, Eq)
 
 desugar :: Statement -> DietStatement
-desugar = undefined
+desugar (Incr varName) = DAssign varName (Op (Var varName)  Plus (Val 1))
+desugar (Assign varName expr) = DAssign varName expr
+desugar (If expr stm1 stm2) = DIf expr (desugar stm1) (desugar stm2)
+desugar (While expr stm) = DWhile expr (desugar stm)
+desugar (Sequence stm1 stm2) = DSequence (desugar stm1) (desugar stm2)
+desugar Skip = DSkip
+desugar (For initStm loopCond updateStm bodyStm) =
+  DSequence (desugar initStm) (DWhile loopCond (DSequence (desugar bodyStm) (desugar updateStm)))
 
 
 -- Exercise 4 -----------------------------------------
 
 evalSimple :: State -> DietStatement -> State
-evalSimple = undefined
+evalSimple currentState (DAssign varName expr) = extend currentState varName (evalE currentState expr)
+evalSimple currentState (DIf cond trueStm elseStm) =
+  let condValue = evalE currentState cond
+  in
+    if condValue == 0 then (evalSimple currentState elseStm) else (evalSimple currentState trueStm)
+evalSimple currentState (DWhile expr bodyStm) =
+  let condValue = evalE currentState expr
+      newState = evalSimple currentState bodyStm
+  in
+    if condValue == 0 then currentState else (evalSimple newState (DWhile expr bodyStm))
+evalSimple currentState (DSequence stm1 stm2) = evalSimple (evalSimple currentState stm1) stm2
+evalSimple currentState DSkip = currentState
 
 run :: State -> Statement -> State
-run = undefined
+run currentState stm = evalSimple currentState (desugar stm)
 
 -- Programs -------------------------------------------
 
