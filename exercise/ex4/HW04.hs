@@ -7,7 +7,7 @@ newtype Poly a = P [a]
 -- Exercise 1 -----------------------------------------
 
 x :: Num a => Poly a
-x = P [1]
+x = P [0,1]
 
 -- Exercise 2 ----------------------------------------
 
@@ -30,6 +30,7 @@ show' (P (m:ms)) current_power results
   | otherwise = show' (P ms) (current_power + 1) ((formatPower m current_power):results)
   where formatPower item p
           | item == 1 && p == 0 = show item
+          | item == 1 && p == 1 = "x"
           | item == 1 = "x^" ++ (show p)
           | p == 0 = show item
           | p == 1 = show item ++ "x"
@@ -46,15 +47,29 @@ plus (P lst1) (P lst2) = P $ reverse (plusList lst1 lst2 [])
 
 -- Exercise 5 -----------------------------------------
 times :: Num a => Poly a -> Poly a -> Poly a
-times (P lst1) (P lst2) = foldl (\memo p -> memo + p)(P []) $foldl (\memo n -> (P (map (*n) lst1)) : memo) [] lst2
+-- times = undefined
+times (P lst1) (P lst2) = sum $ map (eachProduct lst2) (listWithIndex lst1)
+  where eachProduct lst (power, n) = times' n power lst
+
+listWithIndex :: [a] -> [(Int, a)]
+listWithIndex = zip [0..]
+
+times' :: Num a => a -> Int -> [a] -> Poly a
+times' n power1 lst = P $ shift (resultPower - power2) 0 (map (n*) lst)
+  where power2 = (length lst + 1)
+        resultPower = power1 + power2
+
+shift :: Num a => Int -> a -> [a] -> [a]
+shift 0 _ lst = lst
+shift n a lst = shift (n - 1) a (a:lst)
 
 -- Exercise 6 -----------------------------------------
 
 instance Num a => Num (Poly a) where
     (+) = plus
     (*) = times
-    negate      = undefined
-    fromInteger = undefined
+    negate      (P lst) = P $ map ((-1)*) lst
+    fromInteger = P . (:[]) . fromInteger
     -- No meaningful definitions exist
     abs    = undefined
     signum = undefined
@@ -62,7 +77,7 @@ instance Num a => Num (Poly a) where
 -- Exercise 7 -----------------------------------------
 
 applyP :: Num a => Poly a -> a -> a
-applyP = undefined
+applyP (P lst) n = sum $ map (\(power,param) -> param * (n ^ power)) (listWithIndex lst)
 
 -- Exercise 8 -----------------------------------------
 
