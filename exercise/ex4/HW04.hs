@@ -84,10 +84,17 @@ applyP (P lst) n = sum $ map (\(power,param) -> param * (n ^ power)) (listWithIn
 class Num a => Differentiable a where
     deriv  :: a -> a
     nderiv :: Int -> a -> a
-    nderiv = undefined
+    nderiv 0 a = a
+    nderiv n a = nderiv (n - 1) (deriv a)
+    deriv a = nderiv 1 a
+
+polyDeriv :: Num a => Poly a -> Poly a
+polyDeriv (P lst) = sum $ map derivSingle (tail $ listWithIndex lst)
+
+derivSingle :: Num a => (Int, a) -> Poly a
+derivSingle (power, param) = (P [(fromInteger $ toInteger power) * param]) * (x^(power - 1))
 
 -- Exercise 9 -----------------------------------------
 
 instance Num a => Differentiable (Poly a) where
-    deriv = undefined
-
+    deriv = polyDeriv
